@@ -1,0 +1,1 @@
+@if(Context.Session.GetString("ApiError") is string apiError){<div class="alert alert-danger" role="alert">@apiError</div>}@if(TempData["Error"] is string error){<div class="alert alert-danger" role="alert">@error</div>}@if(TempData["Success"] is string success){<div class="alert alert-success" role="status">@success</div>}
