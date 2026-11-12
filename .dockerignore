@@ -4,4 +4,4 @@
 .vs
 .vscode
 **/.user
-**/appsettings.*.json
+**/appsettings.*.Local.json
