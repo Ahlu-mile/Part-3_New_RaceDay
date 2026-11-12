@@ -105,7 +105,8 @@ This repository includes Docker build and Compose wiring. Azure storage, the SQL
 ## CI Flow Green Tick
 <img width="1917" height="1018" alt="image" src="https://github.com/user-attachments/assets/963c9f6f-fddb-498e-984e-dce22e57cddc" />
 
-
+## Docker Image Proof
+<img width="1917" height="1015" alt="Screenshot 2026-11-12 122610" src="https://github.com/user-attachments/assets/6444c8a4-0755-483a-8c64-6384c5f96570" />
 
 
 
