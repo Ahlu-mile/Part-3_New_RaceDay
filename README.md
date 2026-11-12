@@ -15,13 +15,13 @@ RaceDay is an event-management system for running, walking and cycling events. P
 ## Prerequisites
 
 - Visual Studio 2022 with the .NET 8 SDK/workload, or .NET 8 SDK installed.
-- SQL Server instance `LabVM2049939\\SQLEXPRESS` and a compatible `RaceDayDB` database.
+- SQL Server instance `localhost\\SQLEXPRESS` and a compatible `RaceDayDB` database.
 - Docker Desktop for the container requirement.
 - An Azure subscription/storage account is needed to demonstrate successful Blob uploads. The MVC and API code can be developed before Azure is provisioned, but uploads will return a clear configuration error until credentials are set.
 
 ## Database setup
 
-Keep the database and connection string that already work with your Part 2 API. The API configuration now uses `Server=LabVM2049939\\SQLEXPRESS;Database=RaceDayDB;Trusted_Connection=True;...` in both `appsettings.json` and `appsettings.Development.json`. The API launches at `http://localhost:5080` in the included HTTP launch profile. Confirm that this server is reachable and that `RaceDayDB` exists before running migrations.
+Keep the database and connection string that already work with your Part 2 API. The API configuration now uses `Server=localhost\\SQLEXPRESS;Database=RaceDayDB;Trusted_Connection=True;...` in both `appsettings.json` and `appsettings.Development.json`. The API launches at `http://localhost:5080` in the included HTTP launch profile. Confirm that this server is reachable and that `RaceDayDB` exists before running migrations.
 
 Part 3 stores uploaded image URLs on the existing `Events` and `Users` records. After backing up the database, open `docs/Part3_Add_Image_Urls.sql` in SSMS, select the correct RaceDay database, and execute it once. It only adds nullable columns if they do not exist; it does not drop tables. Do not run it against a different database by accident.
 
@@ -113,4 +113,5 @@ This repository includes Docker build and Compose wiring. Azure storage, the SQL
 
 ## SQL Server and EF Core migrations
 
-The requested SQL Server instance is configured in both API settings files: `LabVM2049939\\SQLEXPRESS`. The database name remains `RaceDayDB`. See `docs/SQL_Server_and_Migrations_Guide.md` and `RaceDay.API/Migrations/README.md` before applying migrations. No `InitialCreate` migration is included because the existing Part 2 database may already contain the tables. Verify the actual database state before creating any migration so existing tables are not recreated.
+The requested SQL Server instance is configured in both API settings files: `localhost\\SQLEXPRESS`. The database name remains `RaceDayDB`. See `docs/SQL_Server_and_Migrations_Guide.md` and `RaceDay.API/Migrations/README.md` before applying migrations. No `InitialCreate` migration is included because the existing Part 2 database may already contain the tables. Verify the actual database state before creating any migration so existing tables are not recreated.
+

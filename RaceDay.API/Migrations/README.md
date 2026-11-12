@@ -5,7 +5,7 @@ actual `ApplicationDbContext` and checked against the database schema on the mac
 A fabricated migration or an unconditional `InitialCreate` could try to recreate tables already present in
 `RaceDayDB` and damage or conflict with the existing Part 2 database.
 
-After confirming that `LabVM2049939\SQLEXPRESS` is reachable and identifying whether `RaceDayDB` already
+After confirming that `localhost\SQLEXPRESS` is reachable and identifying whether `RaceDayDB` already
 contains the six Part 1 tables, use the appropriate path:
 
 ## If RaceDayDB already contains the Part 1 tables
@@ -37,3 +37,4 @@ dotnet ef migrations list --project RaceDay.API --startup-project RaceDay.API
 
 This folder is intentionally accompanied by this note rather than an unverified migration file. The project
 must be scaffolded against the actual database state before a safe migration can be supplied.
+

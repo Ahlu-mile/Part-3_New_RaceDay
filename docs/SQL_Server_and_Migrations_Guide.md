@@ -4,18 +4,20 @@
 
 The API now points to:
 
-- Server: `LabVM2049939\SQLEXPRESS`
+- Server: `localhost\SQLEXPRESS`
 - Database: `RaceDayDB`
 - Authentication: Windows Integrated Authentication (`Trusted_Connection=True`)
 
 Both `RaceDay.API/appsettings.json` and `RaceDay.API/appsettings.Development.json` use the same connection string. The MVC website does not connect directly to SQL Server; it calls the API.
+
+If your SQL Server uses a different machine or instance, override the setting for the API process with `ConnectionStrings__DefaultConnection`. For example, in PowerShell: `$env:ConnectionStrings__DefaultConnection = "Server=<server>\<instance>;Database=RaceDayDB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"`.
 
 ## 1. Check that SQL Server is reachable
 
 Open PowerShell. Run:
 
 ```powershell
-sqlcmd -S "LabVM2049939\SQLEXPRESS" -E -Q "SELECT @@SERVERNAME AS ServerName;"
+sqlcmd -S "localhost\SQLEXPRESS" -E -Q "SELECT @@SERVERNAME AS ServerName;"
 ```
 
 If PowerShell says `sqlcmd` is not recognised, install the Microsoft SQL command-line tools or perform the checks in SSMS.
@@ -23,7 +25,7 @@ If PowerShell says `sqlcmd` is not recognised, install the Microsoft SQL command
 ## 2. Check whether the database exists
 
 ```powershell
-sqlcmd -S "LabVM2049939\SQLEXPRESS" -E -Q "SELECT name FROM sys.databases WHERE name = 'RaceDayDB';"
+sqlcmd -S "localhost\SQLEXPRESS" -E -Q "SELECT name FROM sys.databases WHERE name = 'RaceDayDB';"
 ```
 
 If no row is returned, the database is not present on this instance. Do not apply migrations until the correct database name and setup plan are confirmed.
@@ -31,7 +33,7 @@ If no row is returned, the database is not present on this instance. Do not appl
 ## 3. Check access to RaceDayDB
 
 ```powershell
-sqlcmd -S "LabVM2049939\SQLEXPRESS" -E -d "RaceDayDB" -Q "SELECT DB_NAME() AS ConnectedDatabase;"
+sqlcmd -S "localhost\SQLEXPRESS" -E -d "RaceDayDB" -Q "SELECT DB_NAME() AS ConnectedDatabase;"
 ```
 
 A successful result should show `RaceDayDB`. If login fails, check Windows authentication permissions and that the SQL Server instance is running.
@@ -39,7 +41,7 @@ A successful result should show `RaceDayDB`. If login fails, check Windows authe
 ## 4. Check tables without changing anything
 
 ```powershell
-sqlcmd -S "LabVM2049939\SQLEXPRESS" -E -d "RaceDayDB" -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME;"
+sqlcmd -S "localhost\SQLEXPRESS" -E -d "RaceDayDB" -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME;"
 ```
 
 Look for the existing Part 2 tables: `Users`, `Events`, `Categories`, `Enrolments`, `Results`, and `RouteInfo`.
@@ -86,3 +88,5 @@ In Swagger, execute `GET /api/events`. A `200 OK` indicates that endpoint return
 Browser → RaceDay MVC → existing RaceDay API → SQL Server
 
 The MVC project must not contain a direct SQL Server connection or its own EF Core DbContext.
+
+
