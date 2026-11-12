@@ -105,7 +105,8 @@ GitHub Actions workflow: `.github/workflows/ci-part3.yml`. It installs .NET 8, r
 This repository includes Docker build and Compose wiring. Azure storage, the SQL Server database, and any Azure Container Registry are external services and must be provisioned and configured with private environment variables before they can be used. Source files alone do not prove external credentials, database connectivity, Azure uploads, or a cloud deployment have been verified.
 
 ## CI Flow Green Tick
-<img width="1917" height="1018" alt="image" src="https://github.com/user-attachments/assets/963c9f6f-fddb-498e-984e-dce22e57cddc" />
+<img width="1917" height="1017" alt="image" src="https://github.com/user-attachments/assets/2c0e4d47-6fef-43dd-a6cd-d070db7cb1d1" />
+
 
 ## Docker Image Proof
 <img width="1917" height="1015" alt="Screenshot 2026-11-12 122610" src="https://github.com/user-attachments/assets/6444c8a4-0755-483a-8c64-6384c5f96570" />
