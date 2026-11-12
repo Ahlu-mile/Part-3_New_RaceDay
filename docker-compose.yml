@@ -1,0 +1,14 @@
+services:
+  mvc:
+    build:
+      context: .
+      dockerfile: RaceDay.Mvc/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ApiSettings__BaseUrl: ${RACEDAY_API_BASE_URL:-http://host.docker.internal:5080/}
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
