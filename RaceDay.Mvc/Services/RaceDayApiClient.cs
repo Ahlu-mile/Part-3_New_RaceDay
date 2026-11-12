@@ -5,9 +5,9 @@ using System.Text.Json;
 namespace RaceDay.Mvc.Services;
 public sealed class RaceDayApiClient
 {
-    private readonly HttpClient _http; private readonly IHttpContextAccessor _accessor; private readonly IConfiguration _config;
+    private readonly HttpClient _http; private readonly IHttpContextAccessor _accessor; private readonly IConfiguration _config; private readonly ILogger<RaceDayApiClient> _logger;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    public RaceDayApiClient(HttpClient http, IHttpContextAccessor accessor, IConfiguration config) { _http=http; _accessor=accessor; _config=config; }
+    public RaceDayApiClient(HttpClient http, IHttpContextAccessor accessor, IConfiguration config, ILogger<RaceDayApiClient> logger) { _http=http; _accessor=accessor; _config=config; _logger=logger; }
     private HttpContext? Context => _accessor.HttpContext;
     private string BaseUrl => _config["ApiSettings:BaseUrl"] ?? "http://localhost:5080/";
     public async Task<JsonDocument?> SendAsync(HttpMethod method, string path, object? body=null, IFormFile? file=null)
@@ -20,9 +20,9 @@ public sealed class RaceDayApiClient
             using var response=await _http.SendAsync(req);
             if (response.Headers.TryGetValues("Set-Cookie",out var setCookies)) { var apiCookie=setCookies.Select(x=>x.Split(';',2)[0]).FirstOrDefault(x=>x.StartsWith(".AspNetCore.Session=")); if(apiCookie!=null) Context?.Session.SetString("ApiCookie",apiCookie); }
             var raw=await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode) { var message=$"API request failed ({(int)response.StatusCode} {response.ReasonPhrase})."; try { using var e=JsonDocument.Parse(raw); if(e.RootElement.TryGetProperty("message",out var m)) message=m.GetString()??message; else if(e.RootElement.TryGetProperty("title",out var t)) message=t.GetString()??message; } catch {} Context?.Session.SetString("ApiError",message); return null; }
+            if (!response.IsSuccessStatusCode) { _logger.LogWarning("RaceDay API {Method} {Path} returned HTTP {StatusCode}", method, path, (int)response.StatusCode); var message=$"API request failed ({(int)response.StatusCode} {response.ReasonPhrase})."; try { using var e=JsonDocument.Parse(raw); if(e.RootElement.TryGetProperty("message",out var m)) message=m.GetString()??message; else if(e.RootElement.TryGetProperty("title",out var t)) message=t.GetString()??message; } catch {} Context?.Session.SetString("ApiError",message); return null; }
             if(string.IsNullOrWhiteSpace(raw)) return JsonDocument.Parse("{}"); return JsonDocument.Parse(raw);
-        } catch(HttpRequestException) { Context?.Session.SetString("ApiError","RaceDay API could not be reached. Start the API and check ApiSettings:BaseUrl."); return null; }
+        } catch(HttpRequestException ex) { _logger.LogWarning(ex, "RaceDay API {Method} {Path} could not be reached", method, path); Context?.Session.SetString("ApiError","RaceDay API could not be reached. Start the API and check ApiSettings:BaseUrl."); return null; }
     }
     public Task<JsonDocument?> Get(string path)=>SendAsync(HttpMethod.Get,path);
     public Task<JsonDocument?> Post(string path,object body)=>SendAsync(HttpMethod.Post,path,body);
