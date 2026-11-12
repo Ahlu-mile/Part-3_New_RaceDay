@@ -82,6 +82,8 @@ docker compose logs -f mvc
 
 Open `http://localhost:8080`. The MVC container calls the API at `http://host.docker.internal:5080/`; the API continues to use its existing SQL Server and Azure configuration. Stop the website with `docker compose down`. To use a different API address, set `RACEDAY_API_BASE_URL` before starting Compose.
 
+See [the local Docker troubleshooting guide](docs/LOCAL_DOCKER_TROUBLESHOOTING.md) for API 500 responses, SQL connection errors and upload failures.
+
 An API Dockerfile is included for environments that use SQL authentication and can provide the database connection string to the container. The default Compose setup keeps the API on the host so the existing Windows/SQL Express and Azure configuration can continue to work.
 ## CI/CD
 
