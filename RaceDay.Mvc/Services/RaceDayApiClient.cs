@@ -21,6 +21,7 @@ public sealed class RaceDayApiClient
             if (response.Headers.TryGetValues("Set-Cookie",out var setCookies)) { var apiCookie=setCookies.Select(x=>x.Split(';',2)[0]).FirstOrDefault(x=>x.StartsWith(".AspNetCore.Session=")); if(apiCookie!=null) Context?.Session.SetString("ApiCookie",apiCookie); }
             var raw=await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode) { _logger.LogWarning("RaceDay API {Method} {Path} returned HTTP {StatusCode}", method, path, (int)response.StatusCode); var message=$"API request failed ({(int)response.StatusCode} {response.ReasonPhrase})."; try { using var e=JsonDocument.Parse(raw); if(e.RootElement.TryGetProperty("message",out var m)) message=m.GetString()??message; else if(e.RootElement.TryGetProperty("title",out var t)) message=t.GetString()??message; } catch {} Context?.Session.SetString("ApiError",message); return null; }
+            Context?.Session.Remove("ApiError");
             if(string.IsNullOrWhiteSpace(raw)) return JsonDocument.Parse("{}"); return JsonDocument.Parse(raw);
         } catch(HttpRequestException ex) { _logger.LogWarning(ex, "RaceDay API {Method} {Path} could not be reached", method, path); Context?.Session.SetString("ApiError","RaceDay API could not be reached. Start the API and check ApiSettings:BaseUrl."); return null; }
     }
