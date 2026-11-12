@@ -11,8 +11,8 @@ namespace RaceDay.API.Controllers;
 [Route("api/media")]
 public sealed class MediaController : ControllerBase
 {
-    private readonly ApplicationDbContext _db; private readonly IConfiguration _configuration;
-    public MediaController(ApplicationDbContext db, IConfiguration configuration) { _db=db; _configuration=configuration; }
+    private readonly ApplicationDbContext _db; private readonly IConfiguration _configuration; private readonly ILogger<MediaController> _logger;
+    public MediaController(ApplicationDbContext db, IConfiguration configuration, ILogger<MediaController> logger) { _db=db; _configuration=configuration; _logger=logger; }
 
     [HttpPost("events/{eventId}/banner")]
     [RequireRole("Organiser")]
@@ -61,13 +61,13 @@ public sealed class MediaController : ControllerBase
             var download=await blob.DownloadStreamingAsync();
             return File(download.Value.Content, download.Value.Details.ContentType ?? "application/octet-stream");
         }
-        catch { return NotFound(); }
+        catch (Exception ex) { _logger.LogError(ex, "Unable to read media blob {BlobName}", blobName); return StatusCode(503, new { message = "Image storage is temporarily unavailable." }); }
     }
 
     private bool TryBlobService(out BlobServiceClient? client)
     {
         var connection=_configuration["AzureStorage:ConnectionString"]; if(string.IsNullOrWhiteSpace(connection)){client=null;return false;}
-        try { client=new BlobServiceClient(connection); return true; } catch { client=null; return false; }
+        try { client=new BlobServiceClient(connection); return true; } catch (Exception ex) { _logger.LogError(ex, "Azure Blob Storage connection configuration is invalid"); client=null; return false; }
     }
     private static bool ValidImage(IFormFile? file) => file is { Length: > 0 and <= 5_000_000 } && new[]{"image/png","image/jpeg","image/webp"}.Contains(file.ContentType,StringComparer.OrdinalIgnoreCase);
     private async Task<string?> SaveBlob(BlobServiceClient service,string folder,IFormFile file)
@@ -87,7 +87,7 @@ public sealed class MediaController : ControllerBase
             var publicBase=(_configuration["ApiSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}").TrimEnd('/');
             return $"{publicBase}/api/media/files/{folder}/{Path.GetFileName(blob.Name)}";
         }
-        catch { return null; }
+        catch (Exception ex) { _logger.LogError(ex, "Unable to upload media blob for folder {Folder}", folder); return null; }
     }
 }
 
