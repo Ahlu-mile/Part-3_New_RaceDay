@@ -24,6 +24,7 @@ public sealed class RaceDayApiClient
             Context?.Session.Remove("ApiError");
             if(string.IsNullOrWhiteSpace(raw)) return JsonDocument.Parse("{}"); return JsonDocument.Parse(raw);
         } catch(HttpRequestException ex) { _logger.LogWarning(ex, "RaceDay API {Method} {Path} could not be reached", method, path); Context?.Session.SetString("ApiError","RaceDay API could not be reached. Start the API and check ApiSettings:BaseUrl."); return null; }
+        catch(JsonException ex) { _logger.LogError(ex, "RaceDay API {Method} {Path} returned invalid JSON", method, path); Context?.Session.SetString("ApiError","RaceDay API returned a response the website could not read."); return null; }
     }
     public Task<JsonDocument?> Get(string path)=>SendAsync(HttpMethod.Get,path);
     public Task<JsonDocument?> Post(string path,object body)=>SendAsync(HttpMethod.Post,path,body);
