@@ -8,6 +8,7 @@ RaceDay is an event-management system for running, walking and cycling events. P
 - `RaceDay.Tests/` — existing Part 2 automated tests.
 - `RaceDay.Contracts/` — shared response contract types for API/MVC integration.
 - `RaceDay.Mvc/` — Part 3 website, controllers, Razor views, API client and Dockerfile.
+- `docker-compose.yml` — MVC container connected to the API running on the host computer.
 - `docs/Part3_Add_Image_Urls.sql` — safe additive SQL upgrade for event-banner and profile-picture URL fields.
 - `.github/workflows/ci-part3.yml` — restore, build whole solution, run API tests and upload test results.
 
@@ -45,13 +46,14 @@ Part 3 stores uploaded image URLs on the existing `Events` and `Users` records. 
 Azure has not been configured by default and no secret is committed in this repository. To enable uploads:
 
 1. In the Azure portal, create a Storage Account.
-2. Create a private Blob container, for example `raceday-media`. Do not enable anonymous public access just to make the demo work.
+2. Create two private Blob containers: `event-images` and `profile-images`. Do not enable anonymous public access just to make the demo work.
 3. Obtain the storage connection string from the account's access keys. Keep it private.
 4. Set it as an environment variable for the API process, not in a public commit. In PowerShell for the current terminal:
 
 ```powershell
 $env:AzureStorage__ConnectionString = "<your-storage-connection-string>"
-$env:AzureStorage__ContainerName = "raceday-media"
+$env:AzureStorage__EventImagesContainer = "event-images"
+$env:AzureStorage__ProfileImagesContainer = "profile-images"
 dotnet run --project RaceDay.API --launch-profile http
 ```
 
@@ -62,26 +64,28 @@ dotnet run --project RaceDay.API --launch-profile http
 
 ## Docker
 
-Build from the solution root (the directory containing `RaceDay.sln`):
+The MVC website runs in Docker and connects to the API running on your Windows computer. This keeps the existing API connection to SQL Server and Azure settings intact. Start the API the same way you normally do, but bind it to an address Docker can reach. In PowerShell:
 
 ```powershell
-docker build -f RaceDay.Mvc/Dockerfile -t raceday-mvc:part3 .
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://0.0.0.0:5080"
+dotnet run --project RaceDay.API --no-launch-profile
 ```
 
-Start the Part 2 API on the Windows host at `http://localhost:5080`, then start the MVC container in a second terminal:
+This uses the API's Development settings and .NET User Secrets, if already configured. Keep that terminal open. Then, from the solution root, start the website container:
 
 ```powershell
-docker rm -f raceday-mvc 2>$null
-docker run -d --name raceday-mvc -p 8080:8080 -e ApiSettings__BaseUrl=http://host.docker.internal:5080/ raceday-mvc:part3
-docker ps
-docker logs raceday-mvc
+docker compose up --build -d
+docker compose ps
+docker compose logs -f mvc
 ```
 
-Open `http://localhost:8080`. `host.docker.internal` lets the container reach the API on the host machine. The API must be running and reachable for data pages to work. To pass Azure configuration to a containerised API, configure the same environment variables on the API process; do not put storage secrets in the MVC container.
+Open `http://localhost:8080`. The MVC container calls the API at `http://host.docker.internal:5080/`; the API continues to use its existing SQL Server and Azure configuration. Stop the website with `docker compose down`. To use a different API address, set `RACEDAY_API_BASE_URL` before starting Compose.
 
+An API Dockerfile is included for environments that use SQL authentication and can provide the database connection string to the container. The default Compose setup keeps the API on the host so the existing Windows/SQL Express and Azure configuration can continue to work.
 ## CI/CD
 
-GitHub Actions workflow: `.github/workflows/ci-part3.yml`. It installs .NET 8, restores `RaceDay.sln`, builds the full solution (including MVC), runs the existing API tests, and uploads test results. Push to the repository to trigger it and add a screenshot of a genuinely green run here before final submission. Do not claim CI passed until the Actions run has completed successfully.
+GitHub Actions workflow: `.github/workflows/ci-part3.yml`. It installs .NET 8, restores and builds `RaceDay.sln`, builds both Docker images, runs the existing API tests, and uploads test results. It validates image builds; publishing to Azure Container Registry still requires a registry and credentials configured in the repository's Actions secrets. Push to the repository to trigger it and add a screenshot of a genuinely green run here before final submission. Do not claim CI passed until the Actions run has completed successfully.
 
 ## Video presentation evidence checklist
 
@@ -96,9 +100,9 @@ GitHub Actions workflow: `.github/workflows/ci-part3.yml`. It installs .NET 8, r
 
 ## Important verification status
 
-The Part 2 files have been preserved and Part 3 MVC/API source files have been added. This development environment did not have the .NET SDK available, so a local `dotnet build`, test run, Azure upload, or Docker build could not be executed here. Run those checks on your machine and fix any compiler/runtime issues before submitting. A source ZIP is not evidence that the application or container has passed those checks.
+This repository includes Docker build and Compose wiring. Azure storage, the SQL Server database, and any Azure Container Registry are external services and must be provisioned and configured with private environment variables before they can be used. Source files alone do not prove external credentials, database connectivity, Azure uploads, or a cloud deployment have been verified.
 
 
 ## SQL Server and EF Core migrations
 
-The requested SQL Server instance is configured in both API settings files: `LabVM2049939\\SQLEXPRESS`. The database name remains `RaceDayDB`. See `docs/SQL_Server_and_Migrations_Guide.md` and `RaceDay.API/Migrations/README.md` before applying migrations. This ZIP does not invent an `InitialCreate` migration because the supplied Part 2 database may already contain the six tables; first verify the actual database state to avoid attempting to recreate existing tables.
+The requested SQL Server instance is configured in both API settings files: `LabVM2049939\\SQLEXPRESS`. The database name remains `RaceDayDB`. See `docs/SQL_Server_and_Migrations_Guide.md` and `RaceDay.API/Migrations/README.md` before applying migrations. No `InitialCreate` migration is included because the existing Part 2 database may already contain the tables. Verify the actual database state before creating any migration so existing tables are not recreated.
