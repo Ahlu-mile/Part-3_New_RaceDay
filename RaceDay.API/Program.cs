@@ -28,10 +28,6 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// Azure Blob Storage
-// Connection string is stored securely in User Secrets.
-builder.Services.AddSingleton<AzureBlobStorageService>();
-
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 

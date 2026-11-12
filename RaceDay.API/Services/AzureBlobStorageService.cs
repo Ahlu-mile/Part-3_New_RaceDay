@@ -11,7 +11,7 @@ namespace RaceDay.API.Services
           IConfiguration configuration)
         {
             var connectionString =
-              configuration["AzureBlobStorage:ConnectionString"];
+              configuration["AzureStorage:ConnectionString"];
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
